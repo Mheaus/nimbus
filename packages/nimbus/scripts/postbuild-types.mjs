@@ -110,11 +110,16 @@ for (const entry of ENTRY_POINTS) {
 // ---------------------------------------------------------------------------
 // Step 4: fix stub runtime content
 //
-// Rolldown compiles `export {}` to empty files. The stub must be CJS
-// (`module.exports = {}`) so webpack's CJS-to-ESM interop silently resolves
-// missing named imports to `undefined` instead of erroring.
+// Rolldown compiles `export {}` to empty files. The stub must be CJS so
+// webpack's CJS-to-ESM interop silently resolves missing named imports to
+// `undefined` instead of erroring.
+//
+// It must not be an object literal (`module.exports = {}`): since webpack
+// 5.110.0, CommonJS object literal exports are analyzed statically, so named
+// imports of the stub fail with "export 'X' was not found" under
+// `strictExportPresence`. `Object.create(null)` keeps the exports dynamic.
 
-const STUB_CJS = "module.exports = {};\n";
+const STUB_CJS = "module.exports = Object.create(null);\n";
 writeFileSync(join(DIST, "plugins", "stub.cjs"), STUB_CJS);
 console.log(`[postbuild-types] wrote CJS stub content to plugins/stub.cjs`);
 
